@@ -1,0 +1,37 @@
+version: "2"
+
+services:
+
+  reverseproxy:
+    image: reverseproxy
+    ports:
+      - "8080:8080"
+      - "8084:8081"
+      - "5432:5432"
+    restart: always
+
+  nginx:
+    depends_on:
+      - reverseproxy
+    image: nginx:alpine
+    restart: always
+
+  app-web:
+    build:
+      context: ./web-server
+    image: web-server
+    volumes:
+      - ./smartalerta/dist/smartalerta.war:/usr/local/tomcat/webapps/smartalerta/
+    links:
+      - app-db
+    depends_on:
+      - reverseproxy
+    restart: always
+
+  app-db:
+    build:
+      context: ./db-server
+    image: db-server
+    depends_on:
+      - reverseproxy
+    restart: always
